@@ -24,17 +24,34 @@ THE SOFTWARE.
 -->
 <html>
     <head>
-        <title>TODO supply a title</title>
+        <title>Template Editor</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="js/zepto.js"></script>
+        <script src="js/jquery-3.6.3.js"></script>
     </head>
     <body>
-        <div>TODO write content</div>
+        <div>Select Template</div>
+        <label for="templates">Choose a Template:</label>
+
+        <select name="templates" id="templates">
+
+        </select> 
+        <div id="editor"></div>
+        <div id="debug"></div>
         <script>
-            Zepto(function ($) {
-                alert('Zepto hoch!')
-            })
-        </script>
+            $(document).ready(function (){
+                $.getJSON("templates", function(json){
+                    $("div#debug").append(json[1].name + "<p>");
+                    $.each(json, function(i,item){
+                        $("div#debug").append(item.name + "<p>");
+                        $("select#templates").append(`<option value="${item.id}">${item.name}</option>`);
+                    });
+                });
+            });
+            $("select#templates").click(function(){
+               $("div#debug").append($("select#templates").find(":selected").text());
+               // fill editor with "stuff" from second ajax call
+            });
+                            </script>
     </body>
 </html>
