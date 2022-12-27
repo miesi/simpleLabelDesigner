@@ -29,12 +29,13 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import de.mieslinger.simplelabeldesigner.servlets.ServletRoot;
 import de.mieslinger.simplelabeldesigner.servlets.ServletTemplate;
 import de.mieslinger.simplelabeldesigner.servlets.ServletTemplates;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.ServletHolder;
 
 /**
  *
@@ -52,6 +53,10 @@ public class Main {
     private static Logger logger = LoggerFactory.getLogger(Main.class);
     private static Server jetty;
 
+    public static String getTemplatesFolder() {
+        return strTemplatesFolder;
+    }
+
     public static void main(String[] args) {
 
         validateOutputDir(strTemplatesFolder);
@@ -61,21 +66,25 @@ public class Main {
 
     private static void startJetty() {
         try {
-            jetty = new Server(numHttpPort);
+            ServletContextHandler servletHandler = new ServletContextHandler(ServletContextHandler.SESSIONS);
+            servletHandler.setContextPath("/");
 
-            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-            context.setContextPath("/");
-
-            jetty.setHandler(context);
-
-            context.addServlet(ServletRoot.class, "/");
+            servletHandler.addServlet(ServletTemplates.class, "/templates"); // POST, GET List go here
+            servletHandler.addServlet(ServletTemplates.class, "/templates/"); // POST, GET List go here
+            servletHandler.addServlet(ServletTemplate.class, "/templates/*"); // GET, DELETE of individual templates go here
+            servletHandler.addServlet(ServletRender.class, "/render");
+            servletHandler.addServlet(ServletRender.class, "/render/");
             //context.addServlet(ServletStatus.class, "/status");
             //context.addServlet(ServletStatistics.class, "/statistics");
-            context.addServlet(ServletTemplates.class, "/templates"); // POST, GET List go here
-            context.addServlet(ServletTemplate.class, "/templates/*"); // GET, DELETE of individual templates go here
-            context.addServlet(ServletRender.class, "/render");
-            jetty.start();
 
+            DefaultServlet servletRoot = new DefaultServlet();
+            ServletHolder holderRoot = new ServletHolder("root", servletRoot);
+            holderRoot.setInitParameter("resourceBase", "./src/webapp/");
+            servletHandler.addServlet(holderRoot, "/*");
+
+            jetty = new Server(numHttpPort);
+            jetty.setHandler(servletHandler);
+            jetty.start();
         } catch (Exception e) {
             logger.warn("Jetty not started: {}", e.toString());
         }
@@ -101,9 +110,5 @@ public class Main {
         }
         logger.info("Output directory '" + strPath + "' is usuable");
         return true;
-    }
-
-    public static String getTemplatesFolder() {
-        return strTemplatesFolder;
     }
 }

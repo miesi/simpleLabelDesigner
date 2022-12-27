@@ -94,6 +94,7 @@ public class ServletTemplates extends HttpServlet {
             long totalTime = System.currentTimeMillis() - startTs;
             out.println(e.toString());
             out.println("Total processing time: " + totalTime + "ms");
+            e.printStackTrace();
         } finally {
             out.close();
         }
